@@ -1,0 +1,28 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xrs.example.crossplane.io
+spec:
+  compositeTypeRef:
+    apiVersion: example.crossplane.io/v1
+    kind: XR
+  mode: Pipeline
+  pipeline:
+  - functionRef:
+      name: upbound-function-azresourcegraph
+    input:
+      apiVersion: azresourcegraph.fn.crossplane.io/v1beta1
+      kind: Input
+      query: "Resources | count"
+      target: "status.azResourceGraphQueryResult"
+      skipQueryWhenTargetHasData: true # Optional: Set to true to skip query if target already contains data
+    credentials:
+      - name: azure-creds
+        source: Secret
+        secretRef:
+          namespace: upbound-system
+          name: azure-account-creds
+    step: upbound-function-azresourcegraph
+  - functionRef:
+      name: crossplane-contrib-function-auto-ready
+    step: crossplane-contrib-function-auto-ready
